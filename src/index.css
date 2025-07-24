@@ -126,4 +126,3 @@ All colors MUST be HSL.
   animation: spin3d 2s infinite linear, pulse-glow 2s infinite ease-in-out;
   transform-style: preserve-3d;
 }
-}
