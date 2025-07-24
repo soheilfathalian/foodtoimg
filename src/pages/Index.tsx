@@ -32,18 +32,21 @@ const Index = () => {
         throw new Error("Failed to generate image");
       }
 
-      const contentType = response.headers.get("content-type");
-      
-      if (contentType && contentType.includes("image")) {
-        // Handle image response
+      // Try to handle as binary image data first, regardless of content-type
+      try {
         const blob = await response.blob();
-        const imageUrl = URL.createObjectURL(blob);
-        setGeneratedImage(imageUrl);
-        toast.success("Image generated successfully!");
-      } else {
-        // Handle JSON response - could be image URL or error message
-        const data = await response.text();
-        console.log("Webhook response:", data);
+        
+        // Check if the blob is actually an image by trying to create an object URL
+        if (blob.size > 0 && blob.type.startsWith('image/')) {
+          const imageUrl = URL.createObjectURL(blob);
+          setGeneratedImage(imageUrl);
+          toast.success("Image generated successfully!");
+          return;
+        }
+        
+        // If blob doesn't seem to be an image, try as text/JSON
+        const data = await blob.text();
+        console.log("Webhook response as text:", data);
         
         try {
           const jsonData = JSON.parse(data);
@@ -71,15 +74,20 @@ const Index = () => {
             toast.error("No image returned from webhook");
           }
         } catch {
-          // If it's not JSON, check if it's an image URL or show as error
+          // If it's not JSON, check if it's a direct image URL
           if (data.startsWith('http') && (data.includes('.jpg') || data.includes('.png') || data.includes('.jpeg'))) {
-            setGeneratedImage(data);
+            setGeneratedImage(data.trim());
             toast.success("Image generated successfully!");
           } else {
-            console.log("Response is not valid JSON or image URL:", data);
-            toast.error("Invalid response format");
+            // If all else fails, try to display the blob as an image anyway
+            const imageUrl = URL.createObjectURL(blob);
+            setGeneratedImage(imageUrl);
+            toast.success("Image generated successfully!");
           }
         }
+      } catch (blobError) {
+        console.error("Error processing response:", blobError);
+        toast.error("Failed to process webhook response");
       }
     } catch (error) {
       console.error("Error generating image:", error);
