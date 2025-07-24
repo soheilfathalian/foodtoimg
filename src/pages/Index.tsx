@@ -20,9 +20,7 @@ const Index = () => {
     setGeneratedImage(null);
 
     try {
-      // For demo purposes, we'll simulate a webhook call
-      // In production, replace this URL with your actual webhook endpoint
-      const response = await fetch("https://your-webhook-endpoint.com/generate", {
+      const response = await fetch("https://n8n.urbakery.com/webhook-test/a5541400-8766-4bfc-ad0f-2607863b31f2", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
