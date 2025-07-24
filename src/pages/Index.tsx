@@ -20,7 +20,7 @@ const Index = () => {
     setGeneratedImage(null);
 
     try {
-      const response = await fetch("https://n8n.urbakery.com/webhook-test/a5541400-8766-4bfc-ad0f-2607863b31f2", {
+      const response = await fetch("https://n8n.urbakery.com/webhook/a5541400-8766-4bfc-ad0f-2607863b31f2", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

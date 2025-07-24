@@ -1,73 +1,214 @@
-# Welcome to your Lovable project
+# Food to IMG - AI Food Image Generator
 
-## Project info
+A modern web application that generates stunning food photos from text descriptions using AI technology. Perfect for restaurants, food bloggers, and culinary professionals who need high-quality food imagery for menus and marketing materials.
 
-**URL**: https://lovable.dev/projects/0fbe68a1-6859-4aaa-9cd8-8f1bad90e16a
+## 🚀 Features
 
-## How can I edit this code?
+- **AI-Powered Image Generation**: Transform food descriptions into professional food photography
+- **Real-time Processing**: Instant image generation with loading states and progress feedback
+- **Smart Validation**: Automatically detects and guides users to enter only food-related items
+- **One-Click Download**: Save generated images directly to your device
+- **Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
+- **Modern UI**: Clean, intuitive interface built with modern design principles
 
-There are several ways of editing your application.
+## 🛠️ Tech Stack
 
-**Use Lovable**
+- **Frontend Framework**: React 18 with TypeScript
+- **Build Tool**: Vite for fast development and optimized builds
+- **Styling**: Tailwind CSS for responsive design
+- **UI Components**: shadcn/ui component library
+- **State Management**: React hooks (useState, useEffect)
+- **Notifications**: Sonner for user feedback
+- **HTTP Client**: Native Fetch API
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/0fbe68a1-6859-4aaa-9cd8-8f1bad90e16a) and start prompting.
+## 📋 Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+Before running this project, make sure you have:
 
-**Use your preferred IDE**
+- **Node.js** (version 16 or higher) - [Download here](https://nodejs.org/)
+- **npm** or **yarn** package manager
+- A modern web browser
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🚀 Quick Start
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 1. Clone the Repository
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+git clone https://github.com/soheilfathalian/foodtoimg.git
+cd foodtoimg
 ```
 
-**Edit a file directly in GitHub**
+### 2. Install Dependencies
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+# Using npm
+npm install
 
-**Use GitHub Codespaces**
+# Or using yarn
+yarn install
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Or using bun
+bun install
+```
 
-## What technologies are used for this project?
+### 3. Start Development Server
 
-This project is built with:
+```bash
+# Using npm
+npm run dev
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Or using yarn
+yarn dev
 
-## How can I deploy this project?
+# Or using bun
+bun run dev
+```
 
-Simply open [Lovable](https://lovable.dev/projects/0fbe68a1-6859-4aaa-9cd8-8f1bad90e16a) and click on Share -> Publish.
+### 4. Open in Browser
 
-## Can I connect a custom domain to my Lovable project?
+Visit `http://localhost:5173` to see your application running locally.
 
-Yes, you can!
+## 📁 Project Structure
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```
+foodtoimg/
+├── src/
+│   ├── components/ui/     # Reusable UI components
+│   ├── hooks/            # Custom React hooks
+│   ├── lib/              # Utility functions
+│   ├── pages/            # Application pages
+│   ├── App.tsx           # Main application component
+│   ├── main.tsx          # Application entry point
+│   └── index.css         # Global styles and design system
+├── public/               # Static assets
+├── package.json          # Project dependencies and scripts
+├── vite.config.ts        # Vite configuration
+├── tailwind.config.js    # Tailwind CSS configuration
+└── tsconfig.json         # TypeScript configuration
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🎨 Design System
+
+The application uses a cohesive design system with:
+
+- **Primary Color**: Warm coral (#FF6F61) - perfect for food applications
+- **Typography**: Inter font family for clean, modern text
+- **Dark/Light Mode**: Comprehensive theme support
+- **Custom Animations**: 3D loading spinners and smooth transitions
+- **Responsive Breakpoints**: Mobile-first design approach
+
+## 🔧 Available Scripts
+
+```bash
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Lint code
+npm run lint
+
+# Type check
+npm run type-check
+```
+
+## 🚀 Deployment
+
+### Option 1: Vercel (Recommended)
+
+1. Push your code to GitHub
+2. Connect your repository to [Vercel](https://vercel.com)
+3. Vercel will automatically deploy on every push to main branch
+
+### Option 2: Netlify
+
+1. Build the project: `npm run build`
+2. Upload the `dist` folder to [Netlify](https://netlify.com)
+3. Configure redirects for SPA routing
+
+### Option 3: GitHub Pages
+
+1. Install gh-pages: `npm install --save-dev gh-pages`
+2. Add deploy script to package.json: `"deploy": "gh-pages -d dist"`
+3. Run: `npm run build && npm run deploy`
+
+## 🔌 API Integration
+
+The application integrates with an intelligent AI image generation service via webhook that uses a multi-step validation and generation process:
+
+### Backend Architecture
+
+The backend consists of an **LLM Agent Pipeline** that ensures quality and prevents misuse:
+
+1. **Input Validation Phase**
+   - An LLM agent first analyzes the user input to verify it's a legitimate food name
+   - This prevents the system from being used to generate non-food images
+   - Invalid inputs are rejected with `[{"output": false}]` response
+
+2. **AI Image Generation Phase**
+   - Validated food names are passed to professional image generation AI models
+   - **Supported AI Models**: Imagen 3/4, Flux, or GPT-Image (configurable)
+   - Custom prompts are applied to ensure restaurant-quality food photography
+   - Prompts include professional lighting, presentation, and food styling elements
+
+3. **Optimization Phase**
+   - Generated images are automatically resized and optimized for web use
+   - File sizes are reduced while maintaining visual quality
+   - Images are converted to web-friendly formats (PNG/JPEG)
+
+
+```
+
+### Security & Quality Features
+
+- **Content Filtering**: LLM agent prevents generation of inappropriate content
+- **Food-Only Policy**: Strict validation ensures only food-related images are generated
+- **Professional Quality**: Custom prompts ensure restaurant-grade food photography
+- **Web Optimization**: Automatic image compression and formatting for fast loading
+
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Issue**: Images not displaying
+- **Solution**: Check browser console for network errors and verify webhook response format
+
+**Issue**: "Please only type food names" message appears for food items
+- **Solution**: Check backend validation logic and webhook response format
+
+**Issue**: Slow image generation
+- **Solution**: This depends on the AI service performance - typical generation takes 5-30 seconds
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👨‍💻 Author
+
+**Soheil Fathalian**
+- GitHub: [@soheilfathalian](https://github.com/soheilfathalian)
+- Repository: [foodtoimg](https://github.com/soheilfathalian/foodtoimg)
+
+## 🙏 Acknowledgments
+
+- Built with modern React and TypeScript
+- UI components from shadcn/ui
+- Styling with Tailwind CSS
+- Icons from Lucide React
+
+---
+
+⭐ **Star this repository if you found it helpful!**
