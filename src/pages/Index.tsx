@@ -1,12 +1,229 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+import { Camera, Download, ChefHat } from "lucide-react";
 
 const Index = () => {
+  const [foodName, setFoodName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+
+  const generateImage = async () => {
+    if (!foodName.trim()) {
+      toast.error("Please enter a food name");
+      return;
+    }
+
+    setIsLoading(true);
+    setGeneratedImage(null);
+
+    try {
+      // For demo purposes, we'll simulate a webhook call
+      // In production, replace this URL with your actual webhook endpoint
+      const response = await fetch("https://your-webhook-endpoint.com/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ foodName: foodName.trim() }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate image");
+      }
+
+      const contentType = response.headers.get("content-type");
+      
+      if (contentType && contentType.includes("image")) {
+        const blob = await response.blob();
+        const imageUrl = URL.createObjectURL(blob);
+        setGeneratedImage(imageUrl);
+        toast.success("Image generated successfully!");
+      } else {
+        // If response is not an image, show error message
+        toast.error("Please just insert food name");
+      }
+    } catch (error) {
+      console.error("Error generating image:", error);
+      toast.error("Please just insert food name");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const downloadImage = () => {
+    if (!generatedImage) return;
+
+    const link = document.createElement("a");
+    link.href = generatedImage;
+    link.download = `${foodName.replace(/\s+/g, "-").toLowerCase()}-menusnap.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Image downloaded!");
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border/40">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+              <ChefHat className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">MenuSnap</h1>
+              <p className="text-sm text-muted-foreground">Generate stunning food photos instantly</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-12">
+        <div className="max-w-2xl mx-auto">
+          {/* Hero Section */}
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Transform Food Names into 
+              <span className="text-primary"> Stunning Photos</span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-lg mx-auto">
+              Generate high-quality, professional food images for your restaurant menu in seconds
+            </p>
+          </div>
+
+          {/* Input Form */}
+          <Card className="mb-8">
+            <CardContent className="p-8">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label htmlFor="food-name" className="text-sm font-medium text-foreground">
+                    Food Name
+                  </label>
+                  <Input
+                    id="food-name"
+                    placeholder="e.g., Grilled Salmon with Lemon"
+                    value={foodName}
+                    onChange={(e) => setFoodName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && generateImage()}
+                    className="text-lg py-6"
+                    disabled={isLoading}
+                  />
+                </div>
+                
+                <Button 
+                  onClick={generateImage}
+                  disabled={isLoading || !foodName.trim()}
+                  className="w-full py-6 text-lg font-medium"
+                  size="lg"
+                >
+                  <Camera className="w-5 h-5 mr-2" />
+                  {isLoading ? "Generating..." : "Generate Photo"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Loading Animation */}
+          {isLoading && (
+            <Card className="mb-8">
+              <CardContent className="p-12">
+                <div className="flex flex-col items-center space-y-6">
+                  <div className="w-20 h-20 bg-primary rounded-2xl loader-3d"></div>
+                  <div className="text-center">
+                    <p className="text-lg font-medium text-foreground">Creating your perfect food photo...</p>
+                    <p className="text-sm text-muted-foreground mt-1">This usually takes 10-15 seconds</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Generated Image */}
+          {generatedImage && !isLoading && (
+            <Card>
+              <CardContent className="p-8">
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-foreground mb-2">
+                      Generated Photo: {foodName}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      High-resolution image ready for your menu
+                    </p>
+                  </div>
+                  
+                  <div className="relative">
+                    <img
+                      src={generatedImage}
+                      alt={`Generated photo of ${foodName}`}
+                      className="w-full h-auto rounded-lg shadow-lg"
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={downloadImage}
+                    variant="outline"
+                    className="w-full py-6 text-lg font-medium"
+                    size="lg"
+                  >
+                    <Download className="w-5 h-5 mr-2" />
+                    Download Image
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Feature Cards */}
+          {!generatedImage && !isLoading && (
+            <div className="grid md:grid-cols-3 gap-6 mt-16">
+              <Card className="text-center">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <Camera className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-foreground mb-2">High Quality</h3>
+                  <p className="text-sm text-muted-foreground">Professional-grade images perfect for menus and marketing</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="text-center">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <ChefHat className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-foreground mb-2">Food Focused</h3>
+                  <p className="text-sm text-muted-foreground">AI trained specifically on appetizing food photography</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="text-center">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <Download className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-foreground mb-2">Instant Download</h3>
+                  <p className="text-sm text-muted-foreground">Get your images immediately in high resolution</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-border/40 mt-20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center text-sm text-muted-foreground">
+            <p>© 2024 MenuSnap. Generate stunning food photos for your restaurant.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
