@@ -43,6 +43,14 @@ const Index = () => {
         if (Array.isArray(jsonData) && jsonData.length > 0) {
           const firstItem = jsonData[0];
           
+          // Check if backend rejected non-food input
+          if (firstItem.output === false) {
+            console.log("Backend rejected non-food input");
+            toast.error("Please only type food names. Try something like 'Grilled Salmon' or 'Chocolate Cake'");
+            setIsLoading(false);
+            return;
+          }
+          
           // Check if the image field contains binary data
           if (firstItem.image) {
             try {
@@ -77,8 +85,39 @@ const Index = () => {
           }
         }
         
-        // Handle direct object response
-        const imageUrl = jsonData.imageUrl || jsonData.image || jsonData.url || jsonData.png || jsonData.result;
+        // Handle base64 image data FIRST (highest priority)
+        if (jsonData.image && typeof jsonData.image === 'string') {
+          // Check if it's a URL
+          if (jsonData.image.startsWith('http')) {
+            console.log("Detected image URL");
+            setGeneratedImage(jsonData.image);
+            toast.success("Image generated successfully!");
+            return;
+          }
+          
+          // Otherwise treat as base64
+          console.log("Detected base64 image data");
+          console.log("Base64 data length:", jsonData.image.length);
+          console.log("First 50 characters:", jsonData.image.substring(0, 50));
+          
+          let base64Data = jsonData.image;
+          
+          // Remove data URL prefix if present
+          if (base64Data.startsWith('data:image/')) {
+            base64Data = base64Data.split(',')[1];
+          }
+          
+          // Create data URL with proper MIME type
+          const base64ImageUrl = `data:image/png;base64,${base64Data}`;
+          console.log("Created image URL:", base64ImageUrl.substring(0, 100) + "...");
+          
+          setGeneratedImage(base64ImageUrl);
+          toast.success("Image generated successfully!");
+          return;
+        }
+
+        // Handle other URL properties as fallback
+        const imageUrl = jsonData.imageUrl || jsonData.url || jsonData.png || jsonData.result;
         if (imageUrl) {
           setGeneratedImage(imageUrl);
           toast.success("Image generated successfully!");
@@ -86,6 +125,7 @@ const Index = () => {
         }
         
         console.log("No image found in response");
+        console.log("Expected format: {\"image\": \"base64-string-here\"}");
         toast.error("No image returned from webhook");
       } catch (parseError) {
         console.error("Error parsing JSON:", parseError);
@@ -286,7 +326,7 @@ const Index = () => {
       <footer className="border-t border-border/40 mt-20">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-sm text-muted-foreground">
-            <p>© 2024 MenuSnap. Generate stunning food photos for your restaurant.</p>
+            <p>© 2025 Food to IMG. Generate stunning food photos for your restaurant.</p>
           </div>
         </div>
       </footer>
