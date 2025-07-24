@@ -113,7 +113,7 @@ const Index = () => {
       }
     } catch (error) {
       console.error("Error generating image:", error);
-      toast.error("Please just insert food name");
+      toast.error("Failed to generate image: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsLoading(false);
     }
