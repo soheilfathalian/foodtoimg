@@ -43,16 +43,32 @@ const Index = () => {
       } else {
         // Handle JSON response - could be image URL or error message
         const data = await response.text();
+        console.log("Webhook response:", data);
         
         try {
           const jsonData = JSON.parse(data);
-          if (jsonData.imageUrl || jsonData.image) {
-            // If JSON contains image URL
-            setGeneratedImage(jsonData.imageUrl || jsonData.image);
+          console.log("Parsed JSON:", jsonData);
+          
+          // Check for various possible image properties
+          const imageUrl = jsonData.imageUrl || jsonData.image || jsonData.url || jsonData.png || jsonData.result;
+          
+          if (imageUrl) {
+            setGeneratedImage(imageUrl);
             toast.success("Image generated successfully!");
+          } else if (Array.isArray(jsonData) && jsonData.length > 0) {
+            // Handle array response - check first element
+            const firstItem = jsonData[0];
+            const arrayImageUrl = firstItem.imageUrl || firstItem.image || firstItem.url || firstItem.png || firstItem.result;
+            if (arrayImageUrl) {
+              setGeneratedImage(arrayImageUrl);
+              toast.success("Image generated successfully!");
+            } else {
+              console.log("No image found in array response");
+              toast.error("No image returned from webhook");
+            }
           } else {
-            // Show error message from response or default
-            toast.error(data.includes("food name") ? data : "Please just insert food name");
+            console.log("No image URL found in response");
+            toast.error("No image returned from webhook");
           }
         } catch {
           // If it's not JSON, check if it's an image URL or show as error
@@ -60,7 +76,8 @@ const Index = () => {
             setGeneratedImage(data);
             toast.success("Image generated successfully!");
           } else {
-            toast.error(data.includes("food name") ? data : "Please just insert food name");
+            console.log("Response is not valid JSON or image URL:", data);
+            toast.error("Invalid response format");
           }
         }
       }
