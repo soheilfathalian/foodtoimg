@@ -32,62 +32,84 @@ const Index = () => {
         throw new Error("Failed to generate image");
       }
 
-      // Try to handle as binary image data first, regardless of content-type
+      const data = await response.text();
+      console.log("Webhook response as text:", data);
+      
       try {
-        const blob = await response.blob();
+        const jsonData = JSON.parse(data);
+        console.log("Parsed JSON:", jsonData);
         
-        // Check if the blob is actually an image by trying to create an object URL
-        if (blob.size > 0 && blob.type.startsWith('image/')) {
-          const imageUrl = URL.createObjectURL(blob);
+        // Handle array response with binary image data
+        if (Array.isArray(jsonData) && jsonData.length > 0) {
+          const firstItem = jsonData[0];
+          
+          // Check if the image field contains binary data
+          if (firstItem.image) {
+            try {
+              // Convert binary data to blob
+              const binaryString = firstItem.image;
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              const blob = new Blob([bytes], { type: 'image/png' });
+              const imageUrl = URL.createObjectURL(blob);
+              setGeneratedImage(imageUrl);
+              toast.success("Image generated successfully!");
+              return;
+            } catch (binaryError) {
+              console.error("Error processing binary data:", binaryError);
+              // If binary conversion fails, try as URL
+              if (typeof firstItem.image === 'string' && firstItem.image.startsWith('http')) {
+                setGeneratedImage(firstItem.image);
+                toast.success("Image generated successfully!");
+                return;
+              }
+            }
+          }
+          
+          // Fallback: check for other possible image properties
+          const arrayImageUrl = firstItem.imageUrl || firstItem.url || firstItem.png || firstItem.result;
+          if (arrayImageUrl) {
+            setGeneratedImage(arrayImageUrl);
+            toast.success("Image generated successfully!");
+            return;
+          }
+        }
+        
+        // Handle direct object response
+        const imageUrl = jsonData.imageUrl || jsonData.image || jsonData.url || jsonData.png || jsonData.result;
+        if (imageUrl) {
           setGeneratedImage(imageUrl);
           toast.success("Image generated successfully!");
           return;
         }
         
-        // If blob doesn't seem to be an image, try as text/JSON
-        const data = await blob.text();
-        console.log("Webhook response as text:", data);
+        console.log("No image found in response");
+        toast.error("No image returned from webhook");
+      } catch (parseError) {
+        console.error("Error parsing JSON:", parseError);
         
-        try {
-          const jsonData = JSON.parse(data);
-          console.log("Parsed JSON:", jsonData);
-          
-          // Check for various possible image properties
-          const imageUrl = jsonData.imageUrl || jsonData.image || jsonData.url || jsonData.png || jsonData.result;
-          
-          if (imageUrl) {
-            setGeneratedImage(imageUrl);
-            toast.success("Image generated successfully!");
-          } else if (Array.isArray(jsonData) && jsonData.length > 0) {
-            // Handle array response - check first element
-            const firstItem = jsonData[0];
-            const arrayImageUrl = firstItem.imageUrl || firstItem.image || firstItem.url || firstItem.png || firstItem.result;
-            if (arrayImageUrl) {
-              setGeneratedImage(arrayImageUrl);
-              toast.success("Image generated successfully!");
-            } else {
-              console.log("No image found in array response");
-              toast.error("No image returned from webhook");
+        // If it's not JSON, check if it's a direct image URL
+        if (data.startsWith('http') && (data.includes('.jpg') || data.includes('.png') || data.includes('.jpeg'))) {
+          setGeneratedImage(data.trim());
+          toast.success("Image generated successfully!");
+        } else {
+          // Try to handle as raw binary data
+          try {
+            const bytes = new Uint8Array(data.length);
+            for (let i = 0; i < data.length; i++) {
+              bytes[i] = data.charCodeAt(i);
             }
-          } else {
-            console.log("No image URL found in response");
-            toast.error("No image returned from webhook");
-          }
-        } catch {
-          // If it's not JSON, check if it's a direct image URL
-          if (data.startsWith('http') && (data.includes('.jpg') || data.includes('.png') || data.includes('.jpeg'))) {
-            setGeneratedImage(data.trim());
-            toast.success("Image generated successfully!");
-          } else {
-            // If all else fails, try to display the blob as an image anyway
+            const blob = new Blob([bytes], { type: 'image/png' });
             const imageUrl = URL.createObjectURL(blob);
             setGeneratedImage(imageUrl);
             toast.success("Image generated successfully!");
+          } catch (rawError) {
+            console.error("Error processing raw binary data:", rawError);
+            toast.error("Failed to process webhook response");
           }
         }
-      } catch (blobError) {
-        console.error("Error processing response:", blobError);
-        toast.error("Failed to process webhook response");
       }
     } catch (error) {
       console.error("Error generating image:", error);
