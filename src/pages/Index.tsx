@@ -35,13 +35,34 @@ const Index = () => {
       const contentType = response.headers.get("content-type");
       
       if (contentType && contentType.includes("image")) {
+        // Handle image response
         const blob = await response.blob();
         const imageUrl = URL.createObjectURL(blob);
         setGeneratedImage(imageUrl);
         toast.success("Image generated successfully!");
       } else {
-        // If response is not an image, show error message
-        toast.error("Please just insert food name");
+        // Handle JSON response - could be image URL or error message
+        const data = await response.text();
+        
+        try {
+          const jsonData = JSON.parse(data);
+          if (jsonData.imageUrl || jsonData.image) {
+            // If JSON contains image URL
+            setGeneratedImage(jsonData.imageUrl || jsonData.image);
+            toast.success("Image generated successfully!");
+          } else {
+            // Show error message from response or default
+            toast.error(data.includes("food name") ? data : "Please just insert food name");
+          }
+        } catch {
+          // If it's not JSON, check if it's an image URL or show as error
+          if (data.startsWith('http') && (data.includes('.jpg') || data.includes('.png') || data.includes('.jpeg'))) {
+            setGeneratedImage(data);
+            toast.success("Image generated successfully!");
+          } else {
+            toast.error(data.includes("food name") ? data : "Please just insert food name");
+          }
+        }
       }
     } catch (error) {
       console.error("Error generating image:", error);
