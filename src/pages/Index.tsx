@@ -4,45 +4,40 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Camera, Download, ChefHat } from "lucide-react";
-
 const Index = () => {
   const [foodName, setFoodName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-
   const generateImage = async () => {
     if (!foodName.trim()) {
       toast.error("Please enter a food name");
       return;
     }
-
     setIsLoading(true);
     setGeneratedImage(null);
-
     try {
       const response = await fetch("https://n8n.urbakery.com/webhook/a5541400-8766-4bfc-ad0f-2607863b31f2", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ foodName: foodName.trim() }),
+        body: JSON.stringify({
+          foodName: foodName.trim()
+        })
       });
-
       if (!response.ok) {
         throw new Error("Failed to generate image");
       }
-
       const data = await response.text();
       console.log("Webhook response as text:", data);
-      
       try {
         const jsonData = JSON.parse(data);
         console.log("Parsed JSON:", jsonData);
-        
+
         // Handle array response with binary image data
         if (Array.isArray(jsonData) && jsonData.length > 0) {
           const firstItem = jsonData[0];
-          
+
           // Check if backend rejected non-food input
           if (firstItem.output === false) {
             console.log("Backend rejected non-food input");
@@ -50,7 +45,7 @@ const Index = () => {
             setIsLoading(false);
             return;
           }
-          
+
           // Check if the image field contains binary data
           if (firstItem.image) {
             try {
@@ -60,7 +55,9 @@ const Index = () => {
               for (let i = 0; i < binaryString.length; i++) {
                 bytes[i] = binaryString.charCodeAt(i);
               }
-              const blob = new Blob([bytes], { type: 'image/png' });
+              const blob = new Blob([bytes], {
+                type: 'image/png'
+              });
               const imageUrl = URL.createObjectURL(blob);
               setGeneratedImage(imageUrl);
               toast.success("Image generated successfully!");
@@ -75,7 +72,7 @@ const Index = () => {
               }
             }
           }
-          
+
           // Fallback: check for other possible image properties
           const arrayImageUrl = firstItem.imageUrl || firstItem.url || firstItem.png || firstItem.result;
           if (arrayImageUrl) {
@@ -84,7 +81,7 @@ const Index = () => {
             return;
           }
         }
-        
+
         // Handle base64 image data FIRST (highest priority)
         if (jsonData.image && typeof jsonData.image === 'string') {
           // Check if it's a URL
@@ -94,23 +91,21 @@ const Index = () => {
             toast.success("Image generated successfully!");
             return;
           }
-          
+
           // Otherwise treat as base64
           console.log("Detected base64 image data");
           console.log("Base64 data length:", jsonData.image.length);
           console.log("First 50 characters:", jsonData.image.substring(0, 50));
-          
           let base64Data = jsonData.image;
-          
+
           // Remove data URL prefix if present
           if (base64Data.startsWith('data:image/')) {
             base64Data = base64Data.split(',')[1];
           }
-          
+
           // Create data URL with proper MIME type
           const base64ImageUrl = `data:image/png;base64,${base64Data}`;
           console.log("Created image URL:", base64ImageUrl.substring(0, 100) + "...");
-          
           setGeneratedImage(base64ImageUrl);
           toast.success("Image generated successfully!");
           return;
@@ -123,13 +118,12 @@ const Index = () => {
           toast.success("Image generated successfully!");
           return;
         }
-        
         console.log("No image found in response");
         console.log("Expected format: {\"image\": \"base64-string-here\"}");
         toast.error("No image returned from webhook");
       } catch (parseError) {
         console.error("Error parsing JSON:", parseError);
-        
+
         // If it's not JSON, check if it's a direct image URL
         if (data.startsWith('http') && (data.includes('.jpg') || data.includes('.png') || data.includes('.jpeg'))) {
           setGeneratedImage(data.trim());
@@ -141,7 +135,9 @@ const Index = () => {
             for (let i = 0; i < data.length; i++) {
               bytes[i] = data.charCodeAt(i);
             }
-            const blob = new Blob([bytes], { type: 'image/png' });
+            const blob = new Blob([bytes], {
+              type: 'image/png'
+            });
             const imageUrl = URL.createObjectURL(blob);
             setGeneratedImage(imageUrl);
             toast.success("Image generated successfully!");
@@ -158,10 +154,8 @@ const Index = () => {
       setIsLoading(false);
     }
   };
-
   const downloadImage = () => {
     if (!generatedImage) return;
-
     const link = document.createElement("a");
     link.href = generatedImage;
     link.download = `${foodName.replace(/\s+/g, "-").toLowerCase()}-menusnap.jpg`;
@@ -170,9 +164,7 @@ const Index = () => {
     document.body.removeChild(link);
     toast.success("Image downloaded!");
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border/40">
         <div className="container mx-auto px-4 py-6">
@@ -181,7 +173,7 @@ const Index = () => {
               <ChefHat className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">MenuSnap</h1>
+              <h1 className="text-2xl font-bold text-foreground">FOOD TO IMG</h1>
               <p className="text-sm text-muted-foreground">Generate stunning food photos instantly</p>
             </div>
           </div>
@@ -210,23 +202,10 @@ const Index = () => {
                   <label htmlFor="food-name" className="text-sm font-medium text-foreground">
                     Food Name
                   </label>
-                  <Input
-                    id="food-name"
-                    placeholder="e.g., Grilled Salmon with Lemon"
-                    value={foodName}
-                    onChange={(e) => setFoodName(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && generateImage()}
-                    className="text-lg py-6"
-                    disabled={isLoading}
-                  />
+                  <Input id="food-name" placeholder="e.g., Grilled Salmon with Lemon" value={foodName} onChange={e => setFoodName(e.target.value)} onKeyDown={e => e.key === "Enter" && generateImage()} className="text-lg py-6" disabled={isLoading} />
                 </div>
                 
-                <Button 
-                  onClick={generateImage}
-                  disabled={isLoading || !foodName.trim()}
-                  className="w-full py-6 text-lg font-medium"
-                  size="lg"
-                >
+                <Button onClick={generateImage} disabled={isLoading || !foodName.trim()} className="w-full py-6 text-lg font-medium" size="lg">
                   <Camera className="w-5 h-5 mr-2" />
                   {isLoading ? "Generating..." : "Generate Photo"}
                 </Button>
@@ -235,8 +214,7 @@ const Index = () => {
           </Card>
 
           {/* Loading Animation */}
-          {isLoading && (
-            <Card className="mb-8">
+          {isLoading && <Card className="mb-8">
               <CardContent className="p-12">
                 <div className="flex flex-col items-center space-y-6">
                   <div className="w-20 h-20 bg-primary rounded-2xl loader-3d"></div>
@@ -246,12 +224,10 @@ const Index = () => {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
 
           {/* Generated Image */}
-          {generatedImage && !isLoading && (
-            <Card>
+          {generatedImage && !isLoading && <Card>
               <CardContent className="p-8">
                 <div className="space-y-6">
                   <div className="text-center">
@@ -264,30 +240,19 @@ const Index = () => {
                   </div>
                   
                   <div className="relative">
-                    <img
-                      src={generatedImage}
-                      alt={`Generated photo of ${foodName}`}
-                      className="w-full h-auto rounded-lg shadow-lg"
-                    />
+                    <img src={generatedImage} alt={`Generated photo of ${foodName}`} className="w-full h-auto rounded-lg shadow-lg" />
                   </div>
                   
-                  <Button 
-                    onClick={downloadImage}
-                    variant="outline"
-                    className="w-full py-6 text-lg font-medium"
-                    size="lg"
-                  >
+                  <Button onClick={downloadImage} variant="outline" className="w-full py-6 text-lg font-medium" size="lg">
                     <Download className="w-5 h-5 mr-2" />
                     Download Image
                   </Button>
                 </div>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
 
           {/* Feature Cards */}
-          {!generatedImage && !isLoading && (
-            <div className="grid md:grid-cols-3 gap-6 mt-16">
+          {!generatedImage && !isLoading && <div className="grid md:grid-cols-3 gap-6 mt-16">
               <Card className="text-center">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -317,8 +282,7 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground">Get your images immediately in high resolution</p>
                 </CardContent>
               </Card>
-            </div>
-          )}
+            </div>}
         </div>
       </main>
 
@@ -330,8 +294,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
